@@ -337,10 +337,66 @@ pub async fn start_get_friends_links_from_json(
     json_api_or_path: &str,
     client: &ClientWithMiddleware,
 ) -> Result<SettingsFriendsLinksJsonMeta, Box<dyn std::error::Error>> {
+    // 处理GitHub blob链接，转换为raw链接
+    let url = if json_api_or_path.contains("github.com") && json_api_or_path.contains("/blob/") {
+        json_api_or_path
+            .replace("github.com", "raw.githubusercontent.com")
+            .replace("/blob/", "/")
+    } else {
+        json_api_or_path.to_string()
+    };
+
     // 向json_api_or_path发起请求
-    let res = client.get(json_api_or_path).send().await?;
-    let json_friends_links = serde_json::from_str(&res.text().await?)?;
-    Ok(json_friends_links)
+    let res = client.get(&url).send().await?;
+    let content = res.text().await?;
+
+    // 尝试解析为JSON
+    match serde_json::from_str(&content) {
+        Ok(json) => Ok(json),
+        Err(_) => {
+            // 如果JSON解析失败，尝试解析为TypeScript/JS格式
+            info!("JSON解析失败，尝试作为TypeScript/JS文件解析: {}", url);
+            parse_friends_from_ts(&content)
+        }
+    }
+}
+
+fn parse_friends_from_ts(content: &str) -> Result<SettingsFriendsLinksJsonMeta, Box<dyn std::error::Error>> {
+    let mut friends = Vec::new();
+    
+    // 匹配对象结构 { key: value, ... }
+    // 使用简单的正则匹配，假设对象结构比较标准
+    let object_re = Regex::new(r"\{\s*([^{}]+?)\s*\}").unwrap();
+    
+    // 匹配字段，支持 name/title, link/url/siteurl, avatar/img/icon/imgurl
+    // 支持单引号和双引号
+    let name_re = Regex::new(r"\b(?:name|title)\s*:\s*['""](.*?)['""]").unwrap();
+    let link_re = Regex::new(r"\b(?:link|url|siteurl)\s*:\s*['""](.*?)['""]").unwrap();
+    let avatar_re = Regex::new(r"\b(?:avatar|img|icon|imgurl)\s*:\s*['""](.*?)['""]").unwrap();
+    let suffix_re = Regex::new(r"\b(?:suffix)\s*:\s*['""](.*?)['""]").unwrap();
+
+    for cap in object_re.captures_iter(content) {
+        let obj_content = &cap[1];
+        
+        let name = name_re.captures(obj_content).map(|c| c[1].to_string());
+        let link = link_re.captures(obj_content).map(|c| c[1].to_string());
+        let avatar = avatar_re.captures(obj_content).map(|c| c[1].to_string());
+        let suffix = suffix_re.captures(obj_content).map(|c| c[1].to_string());
+        
+        if let (Some(name), Some(link), Some(avatar)) = (name, link, avatar) {
+            let mut friend_item = vec![name, link, avatar];
+            if let Some(s) = suffix {
+                friend_item.push(s);
+            }
+            friends.push(friend_item);
+        }
+    }
+    
+    if friends.is_empty() {
+        return Err("无法从文件中解析出友链信息".into());
+    }
+
+    Ok(SettingsFriendsLinksJsonMeta { friends })
 }
 
 pub async fn start_crawl_detailpages(
