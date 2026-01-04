@@ -26,7 +26,7 @@ class VersionUpdater:
         self.root_path = Path(__file__).parent  # 脚本现在在根目录
         self.cargo_toml = self.root_path / "Cargo.toml"
         self.pyproject_toml = self.root_path / "pyproject.toml"
-        self.vercel_py = self.root_path / "api" / "vercel.py"
+        self.vercel_py = self.root_path / "api" / "index.py"
         self.swagger_json = self.root_path / "api" / "swagger.json"
 
     def get_current_version(self):

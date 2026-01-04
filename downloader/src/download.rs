@@ -370,10 +370,10 @@ fn parse_friends_from_ts(content: &str) -> Result<SettingsFriendsLinksJsonMeta, 
     
     // 匹配字段，支持 name/title, link/url/siteurl, avatar/img/icon/imgurl
     // 支持单引号和双引号
-    let name_re = Regex::new(r"\b(?:name|title)\s*:\s*['""](.*?)['""]").unwrap();
-    let link_re = Regex::new(r"\b(?:link|url|siteurl)\s*:\s*['""](.*?)['""]").unwrap();
-    let avatar_re = Regex::new(r"\b(?:avatar|img|icon|imgurl)\s*:\s*['""](.*?)['""]").unwrap();
-    let suffix_re = Regex::new(r"\b(?:suffix)\s*:\s*['""](.*?)['""]").unwrap();
+    let name_re = Regex::new(r#"\b(?:name|title)\s*:\s*['"](.*?)['"]"#).unwrap();
+    let link_re = Regex::new(r#"\b(?:link|url|siteurl)\s*:\s*['"](.*?)['"]"#).unwrap();
+    let avatar_re = Regex::new(r#"\b(?:avatar|img|icon|imgurl)\s*:\s*['"](.*?)['"]"#).unwrap();
+    let suffix_re = Regex::new(r#"\b(?:suffix)\s*:\s*['"](.*?)['"]"#).unwrap();
 
     for cap in object_re.captures_iter(content) {
         let obj_content = &cap[1];
