@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*-
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
@@ -8,6 +9,18 @@ from fastapi.templating import Jinja2Templates
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
+
+
+def _days_since(value: Any) -> int | None:
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(value))
+        if dt.tzinfo is None:
+            return max(0, (datetime.now() - dt).days)
+        return max(0, (datetime.now(dt.tzinfo) - dt).days)
+    except Exception:
+        return None
 
 
 def render_dashboard(
@@ -43,6 +56,22 @@ def render_dashboard(
     except Exception:
         pass
 
+    lost_num = 0
+    for friend in friends:
+        if friend.get("lost"):
+            lost_num += 1
+            friend["_status"] = "已失联"
+            friend["_status_class"] = "lost"
+            friend["_since_days"] = _days_since(friend.get("lostSince"))
+        elif friend.get("error"):
+            friend["_status"] = "异常"
+            friend["_status_class"] = "bad"
+            friend["_since_days"] = _days_since(friend.get("errorSince"))
+        else:
+            friend["_status"] = "正常"
+            friend["_status_class"] = "ok"
+            friend["_since_days"] = None
+
     return templates.TemplateResponse(
         request,
         "dashboard.html",
@@ -57,5 +86,6 @@ def render_dashboard(
             "article_num": stats.get("article_num", 0),
             "articles": articles,
             "friends": friends,
+            "lost_num": lost_num,
         },
     )

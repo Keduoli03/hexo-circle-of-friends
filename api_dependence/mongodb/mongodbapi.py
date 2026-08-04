@@ -7,6 +7,14 @@ from urllib import parse
 from api_dependence.mongodb import db_interface
 
 
+def _normalize_friend(friend):
+    item = dict(friend)
+    item.setdefault("lost", False)
+    item.setdefault("errorSince", None)
+    item.setdefault("lostSince", None)
+    return item
+
+
 def query_all(li, start: int = 0, end: int = 0, rule: str = "updated"):
     """查询所有文章，包含摘要信息（与SQL版本一致）"""
     session = db_interface.db_init()
@@ -112,7 +120,7 @@ def query_friend():
     friend_list_json = []
     if friends:
         for friend in friends:
-            friend_list_json.append(friend)
+            friend_list_json.append(_normalize_friend(friend))
     else:
         # friends为空直接返回
         return {"message": "not found"}
@@ -123,6 +131,7 @@ def query_random_friend(num):
     session = db_interface.db_init()
     friend_db_collection = session.Friend
     friends = list(friend_db_collection.find({}, {"_id": 0}))
+    friends = [_normalize_friend(friend) for friend in friends]
     try:
         if num < 1:
             return {"message": "param 'num' error"}

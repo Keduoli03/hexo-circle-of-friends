@@ -37,12 +37,15 @@ pub async fn insert_friend_table(
     friends: &metadata::Friends,
     pool: &SqlitePool,
 ) -> Result<(), Error> {
-    let sql = "INSERT INTO friends (name, link, avatar, error,createdAt) VALUES (?, ?, ?, ?, ?)";
+    let sql = "INSERT INTO friends (name, link, avatar, error, lost, errorSince, lostSince, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     let q = query(sql)
         .bind(&friends.name)
         .bind(&friends.link)
         .bind(&friends.avatar)
         .bind(friends.error)
+        .bind(friends.lost)
+        .bind(&friends.error_since)
+        .bind(&friends.lost_since)
         .bind(&friends.created_at);
     // println!("sql: {},{:?}",q.sql(),q.take_arguments());
     q.execute(pool).await?;
@@ -86,7 +89,7 @@ pub async fn bulk_insert_friend_table(
         // Note the trailing space; most calls to `QueryBuilder` don't automatically insert
         // spaces as that might interfere with identifiers or quoted strings where exact
         // values may matter.
-        "INSERT INTO friends (name, link, avatar, error,createdAt) ",
+        "INSERT INTO friends (name, link, avatar, error, lost, errorSince, lostSince, createdAt) ",
     );
 
     query_builder.push_values(tuples, |mut b, friends| {
@@ -97,6 +100,9 @@ pub async fn bulk_insert_friend_table(
             .push_bind(friends.link)
             .push_bind(friends.avatar)
             .push_bind(friends.error)
+            .push_bind(friends.lost)
+            .push_bind(friends.error_since)
+            .push_bind(friends.lost_since)
             .push_bind(friends.created_at);
     });
     let query = query_builder.build();
@@ -378,6 +384,9 @@ mod tests {
             name: "测试用户".to_string(),
             link: "https://example.com".to_string(),
             error: false,
+            lost: false,
+            error_since: None,
+            lost_since: None,
             avatar: "https://example.com/avatar.jpg".to_string(),
             created_at: SystemTime::now().elapsed().unwrap().as_secs().to_string(),
         };
@@ -440,6 +449,9 @@ mod tests {
                 name: "用户1".to_string(),
                 link: "https://example1.com".to_string(),
                 error: false,
+                lost: false,
+                error_since: None,
+                lost_since: None,
                 avatar: "https://example1.com/avatar.jpg".to_string(),
                 created_at: SystemTime::now().elapsed().unwrap().as_secs().to_string(),
             },
@@ -447,6 +459,9 @@ mod tests {
                 name: "用户2".to_string(),
                 link: "https://example2.com".to_string(),
                 error: false,
+                lost: false,
+                error_since: None,
+                lost_since: None,
                 avatar: "https://example2.com/avatar.jpg".to_string(),
                 created_at: SystemTime::now().elapsed().unwrap().as_secs().to_string(),
             },
@@ -577,6 +592,9 @@ mod tests {
                 name: "用户1".to_string(),
                 link: "https://example.com".to_string(),
                 error: false,
+                lost: false,
+                error_since: None,
+                lost_since: None,
                 avatar: "https://example.com/avatar.jpg".to_string(),
                 created_at: "2023-01-01".to_string(),
             },
@@ -584,6 +602,9 @@ mod tests {
                 name: "用户2".to_string(),
                 link: "https://example.org".to_string(),
                 error: false,
+                lost: false,
+                error_since: None,
+                lost_since: None,
                 avatar: "https://example.org/avatar.jpg".to_string(),
                 created_at: "2023-01-02".to_string(),
             },
@@ -656,6 +677,9 @@ mod tests {
             name: "测试用户".to_string(),
             link: "https://example.com".to_string(),
             error: false,
+            lost: false,
+            error_since: None,
+            lost_since: None,
             avatar: "https://example.com/avatar.jpg".to_string(),
             created_at: "2023-01-01".to_string(),
         };
@@ -684,6 +708,9 @@ mod tests {
             name: "测试用户".to_string(),
             link: "https://example.com".to_string(),
             error: false,
+            lost: false,
+            error_since: None,
+            lost_since: None,
             avatar: "https://example.com/avatar.jpg".to_string(),
             created_at: "2023-01-01".to_string(),
         };

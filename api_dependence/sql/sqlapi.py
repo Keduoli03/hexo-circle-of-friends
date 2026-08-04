@@ -90,6 +90,9 @@ def query_friend():
                 "link": friend.link,
                 "avatar": friend.avatar,
                 "error": friend.error,
+                "lost": bool(friend.lost),
+                "errorSince": friend.errorSince,
+                "lostSince": friend.lostSince,
                 "createdAt": friend.createdAt if friend.createdAt else None,
             }
             friend_list_json.append(item)
@@ -119,6 +122,9 @@ def query_random_friend(num):
                 "link": d.link,
                 "avatar": d.avatar,
                 "error": d.error,
+                "lost": bool(d.lost),
+                "errorSince": d.errorSince,
+                "lostSince": d.lostSince,
                 "createdAt": d.createdAt if d.createdAt else None,
             }
             friend_list_json.append(itemlist)

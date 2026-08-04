@@ -375,6 +375,9 @@ mod tests {
             name: "测试用户".to_string(),
             link: "https://example.com".to_string(),
             error: false,
+            lost: false,
+            error_since: None,
+            lost_since: None,
             avatar: "https://example.com/avatar.jpg".to_string(),
             created_at: SystemTime::now().elapsed().unwrap().as_secs().to_string(),
         };
@@ -532,6 +535,9 @@ mod tests {
             name: "测试用户".to_string(),
             link: "https://example.com".to_string(),
             error: false,
+            lost: false,
+            error_since: None,
+            lost_since: None,
             avatar: "https://example.com/avatar.jpg".to_string(),
             created_at: "2023-01-01".to_string(),
         };

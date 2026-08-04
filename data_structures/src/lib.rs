@@ -183,6 +183,16 @@ pub mod metadata {
         pub link: String,
         pub avatar: String,
         pub error: bool,
+        #[serde(default)]
+        pub lost: bool,
+        #[serde(default)]
+        #[serde(rename = "errorSince")]
+        #[sqlx(rename = "errorSince")]
+        pub error_since: Option<String>,
+        #[serde(default)]
+        #[serde(rename = "lostSince")]
+        #[sqlx(rename = "lostSince")]
+        pub lost_since: Option<String>,
         #[serde(rename = "createdAt")]
         #[sqlx(rename = "createdAt")]
         pub created_at: String,
@@ -201,6 +211,9 @@ pub mod metadata {
                 link,
                 avatar,
                 error,
+                lost: false,
+                error_since: None,
+                lost_since: None,
                 created_at,
             }
         }
@@ -256,9 +269,11 @@ pub mod config {
         pub list: Vec<Vec<String>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
     pub struct SettingsFriendsLinksJsonMeta {
         pub friends: Vec<Vec<String>>,
+        #[serde(default)]
+        pub lost_friends: Vec<Vec<String>>,
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
