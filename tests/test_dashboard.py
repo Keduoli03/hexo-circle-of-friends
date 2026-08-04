@@ -10,7 +10,11 @@ def test_root_returns_dashboard_for_browser():
     response = client.get("/", headers={"Accept": "text/html"})
     assert response.status_code == 200
     assert "友链朋友圈" in response.text
+    assert 'class="topnav"' in response.text
+    assert 'id="articles"' in response.text
+    assert "加载更多文章" in response.text
     assert "接口调试台" in response.text
+    assert response.text.count('class="article-row"') > 12
 
 
 def test_root_keeps_json_for_api_clients():

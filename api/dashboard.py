@@ -27,7 +27,7 @@ def render_dashboard(
         all_result = query_all(
             ["title", "created", "updated", "link", "author", "avatar"],
             0,
-            12,
+            30,
             "updated",
         )
         if isinstance(all_result, dict) and "statistical_data" in all_result:
