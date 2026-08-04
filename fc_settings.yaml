@@ -41,6 +41,8 @@ SETTINGS_FRIENDS_LINKS: {
         # 如果目标地址的后缀不在其中，就可以在这里添加
         # 比如 https://elizen.me/hello.xml ，填写：
         # ["elizen", "https://elizen.me/", "https://akilar.top/images/headimage.png", "hello.xml"]
+        # 已失联：如果在 json_api_or_path 的 TS/JSON 里写了 tags: ["已失联"]，
+        # 会跳过文章抓取，只检测主页是否可访问，并在仪表盘显示“已失联 N 天”。
     ]
 }
 

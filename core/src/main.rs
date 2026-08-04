@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::File;
 
 use chrono::Utc;
@@ -41,6 +42,36 @@ pub async fn write_data_to_json(pool: &SqlitePool) -> Result<(), Box<dyn std::er
     info!("数据已成功写入到data.json文件");
 
     Ok(())
+}
+
+fn finalize_friend(
+    mut friend: metadata::Friends,
+    previous: Option<&metadata::Friends>,
+    now_str: &str,
+) -> metadata::Friends {
+    if friend.error {
+        if previous
+            .map(|prev| prev.error && prev.error_since.is_some())
+            .unwrap_or(false)
+        {
+            friend.error_since = previous.and_then(|prev| prev.error_since.clone());
+        } else {
+            friend.error_since = Some(now_str.to_string());
+        }
+    }
+
+    if friend.lost {
+        if previous
+            .map(|prev| prev.lost && prev.lost_since.is_some())
+            .unwrap_or(false)
+        {
+            friend.lost_since = previous.and_then(|prev| prev.lost_since.clone());
+        } else {
+            friend.lost_since = Some(now_str.to_string());
+        }
+    }
+
+    friend
 }
 
 /// 检查摘要是否需要更新
@@ -480,7 +511,7 @@ async fn main() {
     // 处理配置项友链
     if fc_settings.settings_friends_links.enable {
         info!("处理配置项友链...");
-        let json_friends_links = if !fc_settings
+        let json_friends_links_meta = if !fc_settings
             .settings_friends_links
             .json_api_or_path
             .is_empty()
@@ -500,13 +531,13 @@ async fn main() {
                         "从api:{}获取配置项友链成功",
                         fc_settings.settings_friends_links.json_api_or_path
                     );
-                    json_friends_links.friends
+                    json_friends_links
                 } else {
                     error!(
                         "从api:{}获取配置项友链失败",
                         fc_settings.settings_friends_links.json_api_or_path
                     );
-                    Vec::new()
+                    data_structures::config::SettingsFriendsLinksJsonMeta::default()
                 }
             } else if let Ok(json_friends_links) =
                 tools::get_json_friends_links(&fc_settings.settings_friends_links.json_api_or_path)
@@ -515,20 +546,21 @@ async fn main() {
                     "从文件:{}获取配置项友链成功",
                     fc_settings.settings_friends_links.json_api_or_path
                 );
-                json_friends_links.friends
+                json_friends_links
             } else {
                 error!(
                     "从文件:{}获取配置项友链失败",
                     fc_settings.settings_friends_links.json_api_or_path
                 );
-                Vec::new()
+                data_structures::config::SettingsFriendsLinksJsonMeta::default()
             }
         } else {
-            Vec::new()
+            data_structures::config::SettingsFriendsLinksJsonMeta::default()
         };
         // concat json_friends_links and settings_friend_postpages
         let mut settings_friend_postpages = fc_settings.settings_friends_links.list.clone();
-        settings_friend_postpages.extend(json_friends_links);
+        settings_friend_postpages.extend(json_friends_links_meta.friends);
+        let lost_friend_postpages = json_friends_links_meta.lost_friends;
         // info!("settings_friend_postpages: {:?}", settings_friend_postpages);
         for postpage_vec in settings_friend_postpages {
             let tm: chrono::DateTime<chrono::FixedOffset> = now;
@@ -571,6 +603,34 @@ async fn main() {
             });
             tasks.push(task);
         }
+
+        for postpage_vec in lost_friend_postpages {
+            if postpage_vec.len() < 3 {
+                continue;
+            }
+            let tm: chrono::DateTime<chrono::FixedOffset> = now;
+            let created_at = tools::strptime_to_string_ymdhms(tm);
+            let mut base_post = metadata::Friends::new(
+                postpage_vec[0].clone(),
+                postpage_vec[1].clone(),
+                postpage_vec[2].clone(),
+                false,
+                created_at,
+            );
+            base_post.lost = true;
+            let client = client.clone();
+            let task = tokio::spawn(async move {
+                let reachable = client
+                    .get(&base_post.link)
+                    .send()
+                    .await
+                    .map(|res| res.status().is_success())
+                    .unwrap_or(false);
+                base_post.error = !reachable;
+                (base_post, vec![])
+            });
+            tasks.push(task);
+        }
     }
     for task in tasks {
         let mut res = task.await.unwrap();
@@ -603,7 +663,28 @@ async fn main() {
                 error!("{}", e);
                 return;
             }
+            let existing_friends = match sqlite::select_all_from_friends(&dbpool).await {
+                Ok(friends) => friends,
+                Err(e) => {
+                    error!("{}", e);
+                    return;
+                }
+            };
+            let existing_friends_map: HashMap<String, metadata::Friends> = existing_friends
+                .into_iter()
+                .map(|friend| (friend.link.clone(), friend))
+                .collect();
+            let now_str = tools::strptime_to_string_ymdhms(now);
             for mut crawl_res in all_res {
+                if crawl_res.1.is_empty() {
+                    crawl_res.0.error = true;
+                }
+                let link = crawl_res.0.link.clone();
+                crawl_res.0 = finalize_friend(
+                    crawl_res.0,
+                    existing_friends_map.get(&link),
+                    &now_str,
+                );
                 if !crawl_res.1.is_empty() {
                     let posts = crawl_res.1.iter().map(|post| {
                         metadata::Posts::new(
@@ -628,7 +709,6 @@ async fn main() {
                     success_friends.push(crawl_res.0);
                     success_posts.push(crawl_res.1);
                 } else {
-                    crawl_res.0.error = true;
                     if let Err(e) = sqlite::insert_friend_table(&crawl_res.0, &dbpool).await {
                         error!("{}", e);
                         return;
@@ -679,7 +759,28 @@ async fn main() {
                 error!("{}", e);
                 return;
             }
+            let existing_friends = match mysql::select_all_from_friends(&dbpool).await {
+                Ok(friends) => friends,
+                Err(e) => {
+                    error!("{}", e);
+                    return;
+                }
+            };
+            let existing_friends_map: HashMap<String, metadata::Friends> = existing_friends
+                .into_iter()
+                .map(|friend| (friend.link.clone(), friend))
+                .collect();
+            let now_str = tools::strptime_to_string_ymdhms(now);
             for mut crawl_res in all_res {
+                if crawl_res.1.is_empty() {
+                    crawl_res.0.error = true;
+                }
+                let link = crawl_res.0.link.clone();
+                crawl_res.0 = finalize_friend(
+                    crawl_res.0,
+                    existing_friends_map.get(&link),
+                    &now_str,
+                );
                 if !crawl_res.1.is_empty() {
                     let posts = crawl_res.1.iter().map(|post| {
                         metadata::Posts::new(
@@ -704,7 +805,6 @@ async fn main() {
                     success_friends.push(crawl_res.0);
                     success_posts.push(crawl_res.1);
                 } else {
-                    crawl_res.0.error = true;
                     if let Err(e) = mysql::insert_friend_table(&crawl_res.0, &dbpool).await {
                         error!("{}", e);
                         return;
@@ -742,7 +842,28 @@ async fn main() {
                 error!("{}", e);
                 return;
             }
+            let existing_friends = match mongo::select_all_from_friends(&clientdb).await {
+                Ok(friends) => friends,
+                Err(e) => {
+                    error!("{}", e);
+                    return;
+                }
+            };
+            let existing_friends_map: HashMap<String, metadata::Friends> = existing_friends
+                .into_iter()
+                .map(|friend| (friend.link.clone(), friend))
+                .collect();
+            let now_str = tools::strptime_to_string_ymdhms(now);
             for mut crawl_res in all_res {
+                if crawl_res.1.is_empty() {
+                    crawl_res.0.error = true;
+                }
+                let link = crawl_res.0.link.clone();
+                crawl_res.0 = finalize_friend(
+                    crawl_res.0,
+                    existing_friends_map.get(&link),
+                    &now_str,
+                );
                 if !crawl_res.1.is_empty() {
                     let posts = crawl_res.1.iter().map(|post| {
                         metadata::Posts::new(
@@ -767,7 +888,6 @@ async fn main() {
                     success_friends.push(crawl_res.0);
                     success_posts.push(crawl_res.1);
                 } else {
-                    crawl_res.0.error = true;
                     if let Err(e) = mongo::insert_friend_table(&crawl_res.0, &clientdb).await {
                         error!("{}", e);
                         return;

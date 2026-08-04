@@ -142,6 +142,13 @@ class Friend(BaseModel):
         example="https://cyan-blog.oss-cn-shenzhen.aliyuncs.com/global/avatar.jpg",
     )
     error: bool = Field(..., description="是否存在错误", example=True)
+    lost: bool = Field(False, description="是否已失联", example=True)
+    errorSince: Optional[str] = Field(
+        None, description="异常开始时间", example="2025-01-01 12:00:00"
+    )
+    lostSince: Optional[str] = Field(
+        None, description="失联开始时间", example="2025-01-01 12:00:00"
+    )
     createdAt: str = Field(..., description="创建时间", example="2025-07-31 20:09:31")
 
 

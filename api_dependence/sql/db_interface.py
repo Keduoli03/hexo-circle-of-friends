@@ -1,7 +1,7 @@
 import os
 import sys
 from db import models
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, scoped_session
 from tools import utils
 
@@ -17,6 +17,17 @@ class SQLEngine(object):
                 models.Model.metadata.create_all(cls.engine)
             except Exception as _e:
                 pass
+            # 兼容旧版 data.db：补充新增的友链状态字段
+            for statement in (
+                "ALTER TABLE friends ADD COLUMN lost BOOLEAN DEFAULT 0",
+                "ALTER TABLE friends ADD COLUMN errorSince VARCHAR(1024)",
+                "ALTER TABLE friends ADD COLUMN lostSince VARCHAR(1024)",
+            ):
+                try:
+                    with cls.engine.begin() as conn:
+                        conn.execute(text(statement))
+                except Exception:
+                    pass
         return cls.engine
 
     @staticmethod

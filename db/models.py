@@ -22,6 +22,9 @@ class Friend(AbstractBase):
     link = Column(String(1024))
     avatar = Column(String(1024))
     error = Column(BOOLEAN)
+    lost = Column(BOOLEAN, default=False)
+    errorSince = Column(String(1024))
+    lostSince = Column(String(1024))
     createdAt = Column(String(1024))
 
 

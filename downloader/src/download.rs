@@ -363,6 +363,7 @@ pub async fn start_get_friends_links_from_json(
 
 fn parse_friends_from_ts(content: &str) -> Result<SettingsFriendsLinksJsonMeta, Box<dyn std::error::Error>> {
     let mut friends = Vec::new();
+    let mut lost_friends = Vec::new();
     
     // 匹配对象结构 { key: value, ... }
     // 使用简单的正则匹配，假设对象结构比较标准
@@ -382,21 +383,29 @@ fn parse_friends_from_ts(content: &str) -> Result<SettingsFriendsLinksJsonMeta, 
         let link = link_re.captures(obj_content).map(|c| c[1].to_string());
         let avatar = avatar_re.captures(obj_content).map(|c| c[1].to_string());
         let suffix = suffix_re.captures(obj_content).map(|c| c[1].to_string());
+        let lost = obj_content.contains("已失联");
         
         if let (Some(name), Some(link), Some(avatar)) = (name, link, avatar) {
             let mut friend_item = vec![name, link, avatar];
             if let Some(s) = suffix {
                 friend_item.push(s);
             }
-            friends.push(friend_item);
+            if lost {
+                lost_friends.push(friend_item);
+            } else {
+                friends.push(friend_item);
+            }
         }
     }
     
-    if friends.is_empty() {
+    if friends.is_empty() && lost_friends.is_empty() {
         return Err("无法从文件中解析出友链信息".into());
     }
 
-    Ok(SettingsFriendsLinksJsonMeta { friends })
+    Ok(SettingsFriendsLinksJsonMeta {
+        friends,
+        lost_friends,
+    })
 }
 
 pub async fn start_crawl_detailpages(
@@ -439,5 +448,22 @@ mod tests {
         // 测试较大的retry_attempts值
         let _client = build_client(5, 10);
         // 确保不会panic
+    }
+
+    #[test]
+    fn test_parse_friends_from_ts_with_lost_friends() {
+        let content = r#"
+export const friends = [
+  { title: "正常友链", avatar: "https://a.example/avatar.jpg", link: "https://a.example", rss: "https://a.example/rss.xml", tags: ["友链"] },
+];
+export const lostFriends = [
+  { title: "失联友链", avatar: "https://b.example/avatar.jpg", link: "https://b.example", tags: ["已失联"] },
+];
+"#;
+        let parsed = parse_friends_from_ts(content).unwrap();
+        assert_eq!(parsed.friends.len(), 1);
+        assert_eq!(parsed.friends[0][0], "正常友链");
+        assert_eq!(parsed.lost_friends.len(), 1);
+        assert_eq!(parsed.lost_friends[0][0], "失联友链");
     }
 }

@@ -432,6 +432,10 @@
       color: var(--bad);
     }
 
+    .state.lost {
+      color: var(--accent-deep);
+    }
+
     .empty {
       margin: 0;
       padding: 26px 0;
@@ -866,7 +870,9 @@
     <div class="wrap">
       <div class="section-head">
         <h2>友链状态</h2>
-        <span class="section-note">共 {{ friends|length }} 位</span>
+        <span class="section-note">
+          共 {{ friends|length }} 位{% if lost_num %} · 失联 {{ lost_num }} 位{% endif %}
+        </span>
       </div>
       <div class="friend-grid">
         {% for friend in friends %}
@@ -876,8 +882,8 @@
               <strong>{{ friend.name }}</strong>
               <span class="friend-link">{{ friend.link }}</span>
             </div>
-            <span class="state {{ 'ok' if not friend.error else 'bad' }}">
-              {{ '正常' if not friend.error else '异常' }}
+            <span class="state {{ friend._status_class }}">
+              {{ friend._status }}{% if friend._since_days is not none %} · {{ friend._since_days }} 天{% endif %}
             </span>
           </a>
         {% else %}
