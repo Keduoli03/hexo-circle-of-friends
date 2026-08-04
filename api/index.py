@@ -8,10 +8,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from tools.utils import get_user_settings
 from tools.utils import get_version
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional, Union
+
+from api.dashboard import render_dashboard
 
 settings = get_user_settings()
 if settings["DATABASE"] == "mysql" or settings["DATABASE"] == "sqlite":
@@ -700,8 +702,7 @@ def summary(link: str = Query(..., description="文章链接地址（必填）")
     "/",
     tags=["SYSTEM"],
     summary="服务状态",
-    description="返回服务运行状态信息",
-    response_model=IndexResponse,
+    description="浏览器访问返回状态面板，接口调用返回 JSON",
     responses={
         200: {
             "description": "服务运行正常",
@@ -718,18 +719,40 @@ def summary(link: str = Query(..., description="文章链接地址（必填）")
         }
     },
 )
-def index():
+def index(
+    request: Request,
+    fmt: str = Query(
+        "auto",
+        alias="format",
+        pattern="^(auto|html|json)$",
+        description="返回格式：auto/html/json",
+    ),
+):
     """
     ## 服务状态检查
 
-    返回服务的基本信息，用于确认后台服务是否正常运行。
+    浏览器访问时返回可视化状态面板；普通接口调用返回 JSON 状态信息。
 
-    ### 返回信息包括：
+    ### 支持参数
+    - **format**: auto 根据 Accept 头自动判断，html 强制返回网页，json 强制返回 JSON
+
+    ### JSON 返回信息包括：
     - **message**: 服务状态消息
     - **version**: 当前版本号
     - **docs**: API文档链接
     - **database**: 使用的数据库类型
     """
+    accept = request.headers.get("accept", "")
+    wants_html = fmt == "html" or (fmt == "auto" and "text/html" in accept)
+    if wants_html:
+        return render_dashboard(
+            request,
+            version=get_version()["version"],
+            database=settings["DATABASE"],
+            query_all=query_all,
+            query_friend=query_friend,
+        )
+
     return {
         "message": "服务运行正常",
         "version": get_version()["version"],
