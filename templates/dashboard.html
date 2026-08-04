@@ -28,6 +28,7 @@
 
     html {
       background: var(--paper);
+      scroll-behavior: smooth;
     }
 
     body {
@@ -57,9 +58,68 @@
       margin: 0 auto;
     }
 
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(245, 239, 227, 0.94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      min-height: 58px;
+    }
+
+    .nav-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+      font-size: 17px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .nav-brand i {
+      color: var(--accent);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .nav-links::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-links a {
+      padding: 8px 0;
+      border-bottom: 2px solid transparent;
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      transition: border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      border-color: var(--accent);
+      color: var(--accent-deep);
+    }
+
     .masthead {
       padding: 72px 0 38px;
       border-bottom: 3px double var(--ink);
+      scroll-margin-top: 78px;
     }
 
     .brand-row {
@@ -152,6 +212,7 @@
 
     .stats {
       border-bottom: 1px solid var(--line);
+      scroll-margin-top: 78px;
     }
 
     .stats-grid {
@@ -196,6 +257,7 @@
     .band {
       padding: 58px 0 66px;
       border-bottom: 1px solid var(--line);
+      scroll-margin-top: 78px;
     }
 
     .section-head {
@@ -237,24 +299,39 @@
       border-color: var(--accent-deep);
     }
 
-    .article-row {
+    .section-note {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .article-list {
       display: grid;
-      grid-template-columns: 64px minmax(0, 1fr) minmax(0, 320px);
-      gap: 22px;
-      align-items: center;
-      padding: 18px 6px;
-      border-bottom: 1px solid var(--line);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+
+    .article-row {
+      display: block;
+      padding: 20px;
+      background: rgba(255, 250, 240, 0.72);
+      transition: background 0.2s ease, transform 0.2s ease;
       animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
     }
 
-    .article-row:first-child {
-      border-top: 1px solid var(--line);
+    .article-row:hover {
+      background: var(--white);
+      transform: translateY(-2px);
     }
 
     .floor {
+      display: block;
+      margin-bottom: 8px;
       color: var(--accent);
       font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
-      font-size: 20px;
+      font-size: 17px;
       font-weight: 800;
     }
 
@@ -284,6 +361,7 @@
 
     .article-summary {
       margin: 0;
+      margin-top: 12px;
       color: var(--ink-soft);
       font-size: 13px;
       line-height: 1.55;
@@ -408,6 +486,64 @@
       font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
       font-size: 13px;
       word-break: break-all;
+    }
+
+    .endpoint-row {
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .endpoint-row:hover {
+      background: rgba(255, 250, 240, 0.65);
+    }
+
+    .endpoint-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.2s ease;
+    }
+
+    .endpoint-link:hover {
+      border-color: var(--accent-deep);
+    }
+
+    .load-more-wrap {
+      display: flex;
+      justify-content: center;
+      padding-top: 24px;
+    }
+
+    .load-more {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 0 22px;
+      border: 1px solid var(--ink);
+      border-radius: 0;
+      color: var(--ink);
+      background: var(--white);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 var(--ink);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+    }
+
+    .load-more:hover {
+      background: var(--paper);
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 var(--ink);
+    }
+
+    .load-more:disabled {
+      cursor: wait;
+      opacity: 0.7;
+      transform: none;
+      box-shadow: 3px 3px 0 var(--ink);
     }
 
     .tester {
@@ -543,6 +679,19 @@
         padding-top: 48px;
       }
 
+      .nav-inner {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 0;
+      }
+
+      .nav-links {
+        width: 100%;
+        gap: 18px;
+        padding-bottom: 2px;
+      }
+
       .brand-row {
         grid-template-columns: 1fr;
         gap: 24px;
@@ -565,13 +714,8 @@
         border-right: 0;
       }
 
-      .article-row {
-        grid-template-columns: 48px minmax(0, 1fr);
-        gap: 14px;
-      }
-
-      .article-summary {
-        grid-column: 1 / -1;
+      .article-list {
+        grid-template-columns: 1fr;
       }
 
       .friend-grid {
@@ -590,6 +734,10 @@
     @media (max-width: 560px) {
       .wrap {
         width: min(100% - 24px, 1180px);
+      }
+
+      .nav-links {
+        gap: 14px;
       }
 
       h1 {
@@ -623,7 +771,24 @@
   </style>
 </head>
 <body>
-  <header class="masthead">
+  <nav class="topnav" aria-label="页面导航">
+    <div class="wrap nav-inner">
+      <span class="nav-brand">
+        <i data-lucide="activity"></i>
+        友链朋友圈
+      </span>
+      <div class="nav-links">
+        <a href="#overview">概览</a>
+        <a href="#articles">最新文章</a>
+        <a href="#friends">友链状态</a>
+        <a href="#endpoints">接口一览</a>
+        <a href="#tester">调试台</a>
+        <a href="/docs">API 文档</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="masthead" id="top">
     <div class="wrap">
       <div class="brand-row">
         <div class="brand">
@@ -649,7 +814,7 @@
     </div>
   </header>
 
-  <section class="stats" aria-label="服务统计">
+  <section class="stats" id="overview" aria-label="服务统计">
     <div class="wrap">
       <div class="stats-grid">
         <div class="stat">
@@ -672,14 +837,11 @@
     </div>
   </section>
 
-  <section class="band">
+  <section class="band" id="articles">
     <div class="wrap">
       <div class="section-head">
         <h2>最新文章</h2>
-        <a class="section-link" href="/all">
-          查看全部接口
-          <i data-lucide="arrow-up-right"></i>
-        </a>
+        <span class="section-note">共 {{ article_num }} 篇 · 默认展示 30 篇</span>
       </div>
       <div class="article-list">
         {% for article in articles %}
@@ -700,17 +862,19 @@
           <p class="empty">暂无文章数据</p>
         {% endfor %}
       </div>
+      <div class="load-more-wrap">
+        <button id="load-more" class="load-more" type="button">
+          加载更多文章
+        </button>
+      </div>
     </div>
   </section>
 
-  <section class="band">
+  <section class="band" id="friends">
     <div class="wrap">
       <div class="section-head">
         <h2>友链状态</h2>
-        <a class="section-link" href="/friend">
-          查看完整列表
-          <i data-lucide="arrow-up-right"></i>
-        </a>
+        <span class="section-note">共 {{ friends|length }} 位</span>
       </div>
       <div class="friend-grid">
         {% for friend in friends %}
@@ -731,14 +895,11 @@
     </div>
   </section>
 
-  <section class="band">
+  <section class="band" id="endpoints">
     <div class="wrap">
       <div class="section-head">
         <h2>接口一览</h2>
-        <a class="section-link" href="/docs">
-          打开 API 文档
-          <i data-lucide="book-open"></i>
-        </a>
+        <span class="section-note">点击路径直接访问，点击整行可快速调试</span>
       </div>
       <div class="table-scroll">
         <table class="endpoint-table">
@@ -751,45 +912,45 @@
             </tr>
           </thead>
           <tbody>
-            <tr>
+            <tr class="endpoint-row" data-path="/all" data-params="?start=0&end=30">
               <td><span class="method">GET</span></td>
-              <td><code>/all</code></td>
+              <td><a class="endpoint-link" href="/all" target="_blank" rel="noopener"><code>/all</code></a></td>
               <td>全部文章与统计信息</td>
               <td><code>start, end, rule</code></td>
             </tr>
-            <tr>
+            <tr class="endpoint-row" data-path="/friend" data-params="">
               <td><span class="method">GET</span></td>
-              <td><code>/friend</code></td>
+              <td><a class="endpoint-link" href="/friend" target="_blank" rel="noopener"><code>/friend</code></a></td>
               <td>返回全部友链</td>
               <td><code>-</code></td>
             </tr>
-            <tr>
+            <tr class="endpoint-row" data-path="/randomfriend" data-params="?num=3">
               <td><span class="method">GET</span></td>
-              <td><code>/randomfriend</code></td>
+              <td><a class="endpoint-link" href="/randomfriend?num=3" target="_blank" rel="noopener"><code>/randomfriend</code></a></td>
               <td>随机返回友链</td>
               <td><code>num</code></td>
             </tr>
-            <tr>
+            <tr class="endpoint-row" data-path="/randompost" data-params="?num=3">
               <td><span class="method">GET</span></td>
-              <td><code>/randompost</code></td>
+              <td><a class="endpoint-link" href="/randompost?num=3" target="_blank" rel="noopener"><code>/randompost</code></a></td>
               <td>随机返回文章</td>
               <td><code>num</code></td>
             </tr>
-            <tr>
+            <tr class="endpoint-row" data-path="/post" data-params="?num=3">
               <td><span class="method">GET</span></td>
-              <td><code>/post</code></td>
+              <td><a class="endpoint-link" href="/post?num=3" target="_blank" rel="noopener"><code>/post</code></a></td>
               <td>按链接返回文章</td>
               <td><code>link, num, rule</code></td>
             </tr>
-            <tr>
+            <tr class="endpoint-row" data-path="/summary" data-params="?link=https%3A%2F%2Fwww.ccgxk.com">
               <td><span class="method">GET</span></td>
-              <td><code>/summary</code></td>
+              <td><a class="endpoint-link" href="/summary?link=https%3A%2F%2Fwww.ccgxk.com" target="_blank" rel="noopener"><code>/summary</code></a></td>
               <td>返回文章摘要</td>
               <td><code>link</code></td>
             </tr>
-            <tr>
+            <tr class="endpoint-row" data-path="/version" data-params="">
               <td><span class="method">GET</span></td>
-              <td><code>/version</code></td>
+              <td><a class="endpoint-link" href="/version" target="_blank" rel="noopener"><code>/version</code></a></td>
               <td>获取版本信息</td>
               <td><code>-</code></td>
             </tr>
@@ -799,7 +960,7 @@
     </div>
   </section>
 
-  <section class="band">
+  <section class="band" id="tester">
     <div class="wrap">
       <div class="section-head">
         <h2>接口调试台</h2>
@@ -850,6 +1011,10 @@
       const pathSelect = document.getElementById("api-path");
       const paramsInput = document.getElementById("api-params");
       const output = document.getElementById("api-output");
+      const articleList = document.querySelector(".article-list");
+      const loadMoreButton = document.getElementById("load-more");
+      const totalArticles = {{ article_num }};
+      let nextStart = {{ articles|length }};
 
       runButton.addEventListener("click", async function () {
         const rawParams = paramsInput.value.trim();
@@ -873,6 +1038,92 @@
         } catch (err) {
           output.textContent = "请求失败：" + err.message;
         }
+      });
+
+      if (nextStart >= totalArticles) {
+        loadMoreButton.hidden = true;
+      }
+
+      function createArticleRow(article) {
+        const row = document.createElement("article");
+        row.className = "article-row";
+
+        const floor = document.createElement("span");
+        floor.className = "floor";
+        floor.textContent = String(article.floor || 0).padStart(2, "0");
+
+        const main = document.createElement("div");
+        main.className = "article-main";
+
+        const title = document.createElement("a");
+        title.className = "article-title";
+        title.href = article.link || "#";
+        title.target = "_blank";
+        title.rel = "noopener";
+        title.textContent = article.title || "";
+
+        const meta = document.createElement("div");
+        meta.className = "article-meta";
+
+        const author = document.createElement("span");
+        author.textContent = article.author || "";
+
+        const time = document.createElement("time");
+        time.textContent = article.created || "";
+
+        meta.append(author, time);
+        main.append(title, meta);
+        row.append(floor, main);
+
+        if (article.summary) {
+          const summary = document.createElement("p");
+          summary.className = "article-summary";
+          summary.textContent = article.summary;
+          row.appendChild(summary);
+        }
+
+        return row;
+      }
+
+      loadMoreButton.addEventListener("click", async function () {
+        loadMoreButton.disabled = true;
+        loadMoreButton.textContent = "加载中...";
+        try {
+          const response = await fetch(
+            "/all?start=" + nextStart + "&end=" + (nextStart + 30) + "&rule=updated",
+            { headers: { "Accept": "application/json" } }
+          );
+          if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+          }
+          const data = await response.json();
+          const rows = data.article_data || [];
+          rows.forEach(function (article) {
+            articleList.appendChild(createArticleRow(article));
+          });
+          nextStart += rows.length;
+          if (nextStart >= totalArticles) {
+            loadMoreButton.hidden = true;
+          } else {
+            loadMoreButton.disabled = false;
+            loadMoreButton.textContent = "加载更多文章";
+          }
+        } catch (err) {
+          loadMoreButton.disabled = false;
+          loadMoreButton.textContent = "加载失败，重试";
+        }
+      });
+
+      document.querySelectorAll(".endpoint-row").forEach(function (row) {
+        row.addEventListener("click", function (event) {
+          if (event.target.closest("a")) {
+            return;
+          }
+          pathSelect.value = row.dataset.path;
+          paramsInput.value = row.dataset.params || "";
+          document.getElementById("tester").scrollIntoView({ behavior: "smooth" });
+          runButton.click();
+        });
       });
     })();
   </script>
