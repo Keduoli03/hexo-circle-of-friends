@@ -63,14 +63,21 @@ def render_dashboard(
             friend["_status"] = "已失联"
             friend["_status_class"] = "lost"
             friend["_since_days"] = _days_since(friend.get("lostSince"))
+            since_label = "已失联"
         elif friend.get("error"):
             friend["_status"] = "异常"
             friend["_status_class"] = "bad"
             friend["_since_days"] = _days_since(friend.get("errorSince"))
+            since_label = "异常"
         else:
             friend["_status"] = "正常"
             friend["_status_class"] = "ok"
-            friend["_since_days"] = None
+            friend["_since_days"] = _days_since(friend.get("createdAt"))
+            since_label = "已添加"
+        if friend["_since_days"] is not None:
+            friend["_state"] = f"{since_label} {friend['_since_days']} 天"
+        else:
+            friend["_state"] = friend["_status"]
 
     return templates.TemplateResponse(
         request,
