@@ -49,6 +49,11 @@ fn finalize_friend(
     previous: Option<&metadata::Friends>,
     now_str: &str,
 ) -> metadata::Friends {
+    // 已存在的友链保留初次添加时间；新添加的友链保持当前扫描时间
+    if let Some(prev) = previous {
+        friend.created_at = prev.created_at.clone();
+    }
+
     if friend.error {
         if previous
             .map(|prev| prev.error && prev.error_since.is_some())
@@ -659,10 +664,7 @@ async fn main() {
                     return;
                 }
             };
-            if let Err(e) = sqlite::truncate_friend_table(&dbpool).await {
-                error!("{}", e);
-                return;
-            }
+            // 先读取已有友链，保证老友链能保留初次添加时间，新友链自动记录首次扫描时间
             let existing_friends = match sqlite::select_all_from_friends(&dbpool).await {
                 Ok(friends) => friends,
                 Err(e) => {
@@ -670,6 +672,10 @@ async fn main() {
                     return;
                 }
             };
+            if let Err(e) = sqlite::truncate_friend_table(&dbpool).await {
+                error!("{}", e);
+                return;
+            }
             let existing_friends_map: HashMap<String, metadata::Friends> = existing_friends
                 .into_iter()
                 .map(|friend| (friend.link.clone(), friend))
@@ -755,10 +761,7 @@ async fn main() {
                     return;
                 }
             };
-            if let Err(e) = mysql::truncate_friend_table(&dbpool).await {
-                error!("{}", e);
-                return;
-            }
+            // 先读取已有友链，保证老友链能保留初次添加时间，新友链自动记录首次扫描时间
             let existing_friends = match mysql::select_all_from_friends(&dbpool).await {
                 Ok(friends) => friends,
                 Err(e) => {
@@ -766,6 +769,10 @@ async fn main() {
                     return;
                 }
             };
+            if let Err(e) = mysql::truncate_friend_table(&dbpool).await {
+                error!("{}", e);
+                return;
+            }
             let existing_friends_map: HashMap<String, metadata::Friends> = existing_friends
                 .into_iter()
                 .map(|friend| (friend.link.clone(), friend))
@@ -838,10 +845,7 @@ async fn main() {
                     return;
                 }
             };
-            if let Err(e) = mongo::truncate_friend_table(&clientdb).await {
-                error!("{}", e);
-                return;
-            }
+            // 先读取已有友链，保证老友链能保留初次添加时间，新友链自动记录首次扫描时间
             let existing_friends = match mongo::select_all_from_friends(&clientdb).await {
                 Ok(friends) => friends,
                 Err(e) => {
@@ -849,6 +853,10 @@ async fn main() {
                     return;
                 }
             };
+            if let Err(e) = mongo::truncate_friend_table(&clientdb).await {
+                error!("{}", e);
+                return;
+            }
             let existing_friends_map: HashMap<String, metadata::Friends> = existing_friends
                 .into_iter()
                 .map(|friend| (friend.link.clone(), friend))
@@ -937,6 +945,56 @@ async fn main() {
 mod tests {
     use super::*;
     use data_structures::metadata::ArticleSummary;
+
+    #[test]
+    fn test_finalize_friend_keeps_existing_created_at() {
+        let mut previous = metadata::Friends::new(
+            "Example".to_string(),
+            "https://example.com".to_string(),
+            "https://example.com/avatar.png".to_string(),
+            false,
+            "2026-01-01 00:00:00".to_string(),
+        );
+        previous.error = true;
+        previous.error_since = Some("2026-07-01 00:00:00".to_string());
+        let friend = metadata::Friends::new(
+            "Example".to_string(),
+            "https://example.com".to_string(),
+            "https://example.com/avatar.png".to_string(),
+            true,
+            "2026-08-07 12:00:00".to_string(),
+        );
+        let friend = finalize_friend(friend, Some(&previous), "2026-08-07 13:00:00");
+        assert_eq!(friend.created_at, "2026-01-01 00:00:00");
+        assert_eq!(friend.error_since.as_deref(), Some("2026-07-01 00:00:00"));
+    }
+
+    #[test]
+    fn test_finalize_friend_keeps_current_time_for_new_friend() {
+        let friend = metadata::Friends::new(
+            "NewFriend".to_string(),
+            "https://new.example.com".to_string(),
+            "https://new.example.com/avatar.png".to_string(),
+            false,
+            "2026-08-07 12:00:00".to_string(),
+        );
+        let friend = finalize_friend(friend, None, "2026-08-07 13:00:00");
+        assert_eq!(friend.created_at, "2026-08-07 12:00:00");
+        assert_eq!(friend.error_since, None);
+    }
+
+    #[test]
+    fn test_finalize_friend_records_error_since_for_new_error() {
+        let friend = metadata::Friends::new(
+            "NewError".to_string(),
+            "https://error.example.com".to_string(),
+            "https://error.example.com/avatar.png".to_string(),
+            true,
+            "2026-08-07 12:00:00".to_string(),
+        );
+        let friend = finalize_friend(friend, None, "2026-08-07 13:00:00");
+        assert_eq!(friend.error_since.as_deref(), Some("2026-08-07 13:00:00"));
+    }
 
     #[test]
     fn test_should_update_summary_content_unchanged_summary_exists() {
