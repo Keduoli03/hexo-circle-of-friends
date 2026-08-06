@@ -217,14 +217,14 @@ class IndexResponse(BaseModel):
 
 
 app = FastAPI(
-    title="Hexo Circle of Friends API",
+    title="RSS Circle API",
     description="文章和朋友管理API，支持AI生成的文章摘要功能。\n\n支持多种数据库：SQLite、MySQL、MongoDB",
     version="6.0.6",
     docs_url="/docs",
     redoc_url="/redoc",
     contact={
-        "name": "Hexo Circle of Friends",
-        "url": "https://github.com/Rock-Candy-Tea/hexo-circle-of-friends",
+        "name": "RSS Circle（Hexo Circle of Friends 二改）",
+        "url": "https://github.com/Keduoli03/rss_circle",
     },
     license_info={
         "name": "Apache 2.0",

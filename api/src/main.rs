@@ -121,7 +121,7 @@ fn is_valid_port(port: u16) -> bool {
 
 /// 打印帮助信息
 fn print_help() {
-    println!("Hexo Circle of Friends API Server");
+    println!("RSS Circle API Server（基于 Hexo Circle of Friends 二改）");
     println!();
     println!("用法:");
     println!("  fcircle_api [选项] [端口号]");

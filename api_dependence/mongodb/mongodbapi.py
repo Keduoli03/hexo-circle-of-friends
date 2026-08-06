@@ -3,7 +3,7 @@
 import random
 from urllib import parse
 
-# from hexo_circle_of_friends.utils.process_time import time_compare
+# from rss_circle.utils.process_time import time_compare
 from api_dependence.mongodb import db_interface
 
 

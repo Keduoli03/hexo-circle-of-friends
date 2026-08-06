@@ -1,4 +1,4 @@
-//! Hexo Circle of Friends API Library
+//! RSS Circle API Library（基于 Hexo Circle of Friends 二改）
 //!
 //! 提供SQLite、MySQL、MongoDB三种数据库的API服务
 
@@ -23,7 +23,7 @@ pub async fn get_swagger_ui() -> Html<String> {
 <!DOCTYPE html>
 <html>
 <head>
-  <title>API文档 - Hexo Circle of Friends</title>
+  <title>API文档 - RSS Circle（Hexo Circle of Friends 二改）</title>
   <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
   <style>
     html {

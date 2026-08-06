@@ -1,7 +1,7 @@
 [project]
-name = "hexo-circle-of-friends"
+name = "rss_circle"
 version = "6.0.6"
-description = "Hexo Circle of Friends"
+description = "RSS Circle（友链朋友圈）"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
