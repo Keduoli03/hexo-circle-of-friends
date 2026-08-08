@@ -254,3 +254,21 @@ def query_summary(link):
         }
     else:
         return {"message": "not found"}
+
+
+def query_article(link):
+    """Return the metadata only when the exact article URL exists."""
+    session = db_init()
+    try:
+        post = session.query(Post).filter_by(link=link).first()
+        if not post:
+            return None
+        return {
+            "title": post.title,
+            "link": post.link,
+            "author": post.author,
+            "created": post.created,
+            "updated": post.updated,
+        }
+    finally:
+        session.close()

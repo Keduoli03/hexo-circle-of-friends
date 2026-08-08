@@ -13,7 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional, Union
 
-from api.dashboard import render_dashboard
+from api.dashboard import render_dashboard, templates
+from api.article_reader import ArticleFetchError, fetch_article
 
 settings = get_user_settings()
 if settings["DATABASE"] == "mysql" or settings["DATABASE"] == "sqlite":
@@ -24,6 +25,7 @@ if settings["DATABASE"] == "mysql" or settings["DATABASE"] == "sqlite":
         query_random_post,
         query_post,
         query_summary,
+        query_article,
     )
 elif settings["DATABASE"] == "mongodb":
     from api_dependence.mongodb.mongodbapi import (
@@ -33,6 +35,7 @@ elif settings["DATABASE"] == "mongodb":
         query_random_post,
         query_post,
         query_summary,
+        query_article,
     )
 else:
     raise Exception("DATABASE not supported")
@@ -703,6 +706,29 @@ def summary(link: str = Query(..., description="文章链接地址（必填）")
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@app.get("/read", include_in_schema=False)
+def read_article(request: Request, link: str = Query(..., min_length=8, max_length=2048)):
+    """Render a database article in the local reader after best-effort extraction."""
+    article = query_article(link)
+    if not article:
+        raise HTTPException(status_code=404, detail="文章不存在")
+
+    content = None
+    error = None
+    try:
+        content = fetch_article(link)
+    except ArticleFetchError as exc:
+        error = str(exc)
+    except Exception:
+        error = "正文抓取暂时失败，请稍后重试"
+
+    return templates.TemplateResponse(
+        request,
+        "article.html",
+        {"request": request, "article": article, "content": content, "error": error},
+    )
 
 
 @app.get(

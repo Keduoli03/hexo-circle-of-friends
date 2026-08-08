@@ -2,6 +2,7 @@
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
+from urllib.parse import quote
 
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
@@ -49,6 +50,9 @@ def render_dashboard(
     except Exception:
         pass
 
+    for article in articles:
+        article["_reader_url"] = "/read?link=" + quote(str(article.get("link", "")), safe="")
+
     try:
         friend_result = query_friend()
         if isinstance(friend_result, list):
@@ -78,6 +82,15 @@ def render_dashboard(
             friend["_state"] = f"{since_label} {friend['_since_days']} 天"
         else:
             friend["_state"] = friend["_status"]
+
+    # Keep the database order within each group, but move unhealthy links back:
+    # normal -> error -> lost. A lost link can also be marked as error, so `lost`
+    # must take precedence when assigning its rank.
+    friends.sort(
+        key=lambda friend: 2
+        if friend.get("lost")
+        else (1 if friend.get("error") else 0)
+    )
 
     return templates.TemplateResponse(
         request,

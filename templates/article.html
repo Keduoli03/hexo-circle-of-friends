@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>{{ article.title }} · 友链朋友圈</title>
+  <style>
+    :root { --paper:#f1eadc; --white:#fffdf7; --ink:#211d17; --muted:#746b5d; --line:#c9bdab; --accent:#b83d26; --reader-width:1320px; }
+    * { box-sizing:border-box; }
+    html { background:var(--paper); }
+    body { margin:0; color:var(--ink); background:radial-gradient(circle at 15% 5%,rgba(184,61,38,.08),transparent 24rem),var(--paper); font-family:"Noto Serif SC","Songti SC",STSong,serif; }
+    a { color:inherit; }
+    .reader-nav { position:sticky; top:0; z-index:3; border-bottom:1px solid var(--ink); background:rgba(241,234,220,.94); backdrop-filter:blur(12px); }
+    .reader-nav div { width:min(100% - 32px,var(--reader-width)); min-height:58px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:18px; }
+    .back,.source { font:700 13px/1.2 "Microsoft YaHei",sans-serif; text-decoration:none; letter-spacing:.04em; }
+    .source { padding:9px 12px; color:var(--white); background:var(--accent); border:1px solid var(--ink); box-shadow:2px 2px 0 var(--ink); }
+    main { width:min(100% - 32px,var(--reader-width)); margin:44px auto 72px; }
+    .article-head { padding:clamp(26px,6vw,58px); border:1px solid var(--ink); background:var(--white); box-shadow:9px 9px 0 var(--ink); }
+    .kicker { margin:0 0 18px; color:var(--accent); font:800 12px/1 "Microsoft YaHei",sans-serif; letter-spacing:.18em; text-transform:uppercase; }
+    h1 { max-width:28em; margin:0; font-size:clamp(26px,3vw,38px); line-height:1.25; letter-spacing:-.015em; }
+    .meta { display:flex; flex-wrap:wrap; gap:8px 20px; margin:24px 0 0; color:var(--muted); font:14px/1.5 "Microsoft YaHei",sans-serif; }
+    .reader-layout { display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:28px; align-items:start; }
+    .article-column { min-width:0; }
+    .content { margin-top:38px; padding:clamp(24px,5vw,64px); border:1px solid var(--line); background:var(--white); }
+    .content p,.content li,.content blockquote { font-size:clamp(17px,2.2vw,19px); line-height:1.95; }
+    .content p { margin:0 0 1.35em; }
+    .content h2,.content h3,.content h4,.content h5,.content h6 { scroll-margin-top:84px; margin:2.2em 0 .8em; line-height:1.3; }
+    .content h2 { padding-bottom:.35em; border-bottom:2px solid var(--ink); font-size:30px; }
+    .content h3 { font-size:24px; }
+    .content blockquote { margin:1.8em 0; padding:1px 0 1px 24px; color:#51493e; border-left:5px solid var(--accent); }
+    .content ul { margin:0 0 1.5em; padding-left:1.5em; }
+    pre { margin:1.8em 0; padding:20px; overflow:auto; color:#f3ead8; background:var(--ink); border-left:5px solid var(--accent); font:14px/1.7 Consolas,"Cascadia Code",monospace; white-space:pre-wrap; }
+    figure { margin:2.2em 0; }
+    figure img { display:block; width:auto; max-width:100%; max-height:76vh; margin:auto; border:1px solid var(--ink); }
+    figcaption { margin-top:8px; color:var(--muted); text-align:center; font:12px/1.5 "Microsoft YaHei",sans-serif; }
+    .toc { position:sticky; top:82px; padding:20px 18px; border:1px solid var(--ink); border-top:5px solid var(--accent); background:var(--white); box-shadow:5px 5px 0 rgba(33,29,23,.9); font-family:"Microsoft YaHei",sans-serif; }
+    .toc-label { display:block; padding-bottom:12px; border-bottom:1px solid var(--line); color:var(--accent); font-size:11px; font-weight:900; letter-spacing:.18em; text-transform:uppercase; }
+    .toc-list { max-height:calc(100vh - 160px); margin:14px 0 0; padding:0; overflow:auto; list-style:none; }
+    .toc-list li + li { margin-top:4px; }
+    .toc-list a { display:block; padding:7px 8px; color:var(--muted); border-left:2px solid transparent; font-size:13px; line-height:1.45; text-decoration:none; transition:.18s ease; }
+    .toc-list a:hover,.toc-list a.active { color:var(--ink); background:var(--paper); border-left-color:var(--accent); }
+    .toc-list .level-3 a,.toc-list .level-4 a,.toc-list .level-5 a,.toc-list .level-6 a { padding-left:20px; font-size:12px; }
+    .article-footer { margin-top:24px; padding:26px 28px; border:1px solid var(--ink); background:var(--white); font-family:"Microsoft YaHei",sans-serif; }
+    .footer-label { margin:0 0 10px; color:var(--muted); font-size:11px; font-weight:900; letter-spacing:.14em; text-transform:uppercase; }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 24px; padding:0; list-style:none; }
+    .tags li { padding:7px 11px; color:var(--accent); background:#f8eee2; border:1px solid #d7a898; font-size:12px; font-weight:800; }
+    .source-address { display:block; padding:13px 15px; color:var(--ink); background:var(--paper); border-left:4px solid var(--accent); font:12px/1.65 Consolas,"Cascadia Code",monospace; overflow-wrap:anywhere; text-decoration:none; }
+    .source-address:hover { text-decoration:underline; }
+    .notice { margin:18px 0 0; color:var(--muted); font-size:12px; line-height:1.7; }
+    .error { margin-top:38px; padding:42px; border:1px solid var(--ink); background:var(--white); box-shadow:8px 8px 0 var(--accent); }
+    .error h2 { margin-top:0; font-size:30px; }
+    @media (max-width:1000px) { .reader-layout { grid-template-columns:1fr; } .toc { position:static; grid-row:1; } .toc-list { max-height:none; columns:2; column-gap:20px; } .article-column { grid-row:2; } }
+    @media (max-width:560px) { main { margin-top:24px; } .article-head { box-shadow:5px 5px 0 var(--ink); } .content,.error { margin-top:24px; } .toc-list { columns:1; } .article-footer { padding:22px 20px; } }
+  </style>
+</head>
+<body>
+  <nav class="reader-nav"><div>
+    <a class="back" href="/#articles">← 返回朋友圈</a>
+    <a class="source" href="{{ article.link }}" target="_blank" rel="noopener noreferrer">打开原文 ↗</a>
+  </div></nav>
+  <main>
+    <div class="reader-layout">
+      <div class="article-column">
+        <header class="article-head">
+          <p class="kicker">Circle Reader / 站内阅读</p>
+          <h1>{{ article.title }}</h1>
+          <p class="meta"><span>{{ article.author }}</span><time>{{ article.created }}</time></p>
+        </header>
+        {% if error %}
+          <section class="error"><h2>这次没能抓到全文</h2><p>{{ error }}</p><p>可以点击右上角“打开原文”继续阅读。</p></section>
+        {% else %}
+          <article class="content">
+            {% for block in content.blocks %}
+              {% if block.type == "heading" %}
+                {% if block.level == 2 %}<h2 id="{{ block.anchor }}">{{ block.text }}</h2>{% else %}<h3 id="{{ block.anchor }}">{{ block.text }}</h3>{% endif %}
+              {% elif block.type == "paragraph" %}<p>{{ block.text }}</p>
+              {% elif block.type == "quote" %}<blockquote>{{ block.text }}</blockquote>
+              {% elif block.type == "code" %}<pre><code>{{ block.text }}</code></pre>
+              {% elif block.type == "list" %}<ul><li>{{ block.text }}</li></ul>
+              {% elif block.type == "image" %}<figure><img src="{{ block.src }}" alt="{{ block.alt }}" loading="lazy" referrerpolicy="no-referrer">{% if block.alt %}<figcaption>{{ block.alt }}</figcaption>{% endif %}</figure>
+              {% endif %}
+            {% endfor %}
+          </article>
+          <footer class="article-footer">
+            {% if content.tags %}
+              <p class="footer-label">文章标签</p>
+              <ul class="tags">{% for tag in content.tags %}<li># {{ tag }}</li>{% endfor %}</ul>
+            {% endif %}
+            <p class="footer-label">原文地址</p>
+            <a class="source-address" href="{{ article.link }}" target="_blank" rel="noopener noreferrer">{{ article.link }}</a>
+            <p class="notice">正文由系统从原网页自动提取，排版或内容可能不完整；版权归原作者所有。</p>
+          </footer>
+        {% endif %}
+      </div>
+      {% if not error and content.toc %}
+        <aside class="toc" aria-label="文章目录">
+          <span class="toc-label">Contents / 目录</span>
+          <ol class="toc-list">
+            {% for item in content.toc %}<li class="level-{{ item.level }}"><a href="#{{ item.anchor }}">{{ item.text }}</a></li>{% endfor %}
+          </ol>
+        </aside>
+      {% endif %}
+    </div>
+  </main>
+  <script>
+    (function () {
+      const links = Array.from(document.querySelectorAll(".toc-list a"));
+      if (!links.length || !("IntersectionObserver" in window)) return;
+      const byId = new Map(links.map(function (link) { return [link.hash.slice(1), link]; }));
+      const observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          const link = byId.get(entry.target.id);
+          if (link && entry.isIntersecting) {
+            links.forEach(function (item) { item.classList.remove("active"); });
+            link.classList.add("active");
+          }
+        });
+      }, { rootMargin: "-18% 0px -68% 0px" });
+      byId.forEach(function (_, id) { const heading = document.getElementById(id); if (heading) observer.observe(heading); });
+    })();
+  </script>
+</body>
+</html>

@@ -369,6 +369,16 @@
       font-size: 13px;
     }
 
+    .article-meta a {
+      color: var(--accent-deep);
+      font-weight: 800;
+      border-bottom: 1px solid transparent;
+    }
+
+    .article-meta a:hover {
+      border-bottom-color: currentColor;
+    }
+
     .article-summary {
       margin: 0;
       margin-top: 12px;
@@ -874,10 +884,11 @@
           <article class="article-row">
             <span class="floor">{{ "%02d"|format(article.floor) }}</span>
             <div class="article-main">
-              <a class="article-title" href="{{ article.link }}" target="_blank" rel="noopener">{{ article.title }}</a>
+              <a class="article-title" href="{{ article._reader_url }}">{{ article.title }}</a>
               <div class="article-meta">
                 <span>{{ article.author }}</span>
                 <time>{{ article.created }}</time>
+                <a href="{{ article.link }}" target="_blank" rel="noopener noreferrer">原文 ↗</a>
               </div>
             </div>
             {% if article.summary %}
@@ -1091,9 +1102,7 @@
 
         const title = document.createElement("a");
         title.className = "article-title";
-        title.href = article.link || "#";
-        title.target = "_blank";
-        title.rel = "noopener";
+        title.href = "/read?link=" + encodeURIComponent(article.link || "");
         title.textContent = article.title || "";
 
         const meta = document.createElement("div");
@@ -1105,7 +1114,13 @@
         const time = document.createElement("time");
         time.textContent = article.created || "";
 
-        meta.append(author, time);
+        const original = document.createElement("a");
+        original.href = article.link || "#";
+        original.target = "_blank";
+        original.rel = "noopener noreferrer";
+        original.textContent = "原文 ↗";
+
+        meta.append(author, time, original);
         main.append(title, meta);
         row.append(floor, main);
 
